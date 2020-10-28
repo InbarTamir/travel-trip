@@ -1,7 +1,7 @@
 'use strict'
 import { mapService } from './services/mapService.js'
 
-var gMap;
+var gMap = null;
 console.log('Main!');
 
 mapService.getLocs()
@@ -41,6 +41,18 @@ export function initMap(lat = 32.0749831, lng = 34.9120554) {
                 center: { lat, lng },
                 zoom: 15
             })
+
+            gMap.addListener('click', e => {
+                console.log(e)
+                console.log('location:', location)
+                const latCoord = e.latLng.lat().toFixed(6);
+                const lngCoord = e.latLng.lng().toFixed(6);
+                
+
+                console.log('lat cs:', e.latLng.lat())
+                console.log('lng coords:', e.latLng.lng())
+            })
+
             console.log('Map!', gMap);
         })
 }
@@ -64,6 +76,7 @@ function getPosition() {
 
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject)
+
     })
 }
 
