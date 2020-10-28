@@ -7,3 +7,8 @@ function loadFromStorage(key) {
 function saveToStorage(key, val) {
     localStorage.setItem(key, JSON.stringify(val));
 }
+
+export const storageService = {
+    loadFromStorage,
+    saveToStorage
+};
