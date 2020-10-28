@@ -1,5 +1,6 @@
 'use strict'
-import { mapService } from './services/mapService.js'
+import { mapService } from './services/mapService.js';
+import { utilService } from './services/util-service.js';
 
 var gMap = null;
 console.log('Main!');
@@ -32,10 +33,10 @@ document.querySelector('.btn').addEventListener('click', (ev) => {
 
 
 export function initMap(lat = 32.0749831, lng = 34.9120554) {
-    console.log('InitMap');
+    // console.log('InitMap');
     return _connectGoogleApi()
         .then(() => {
-            console.log('google available');
+            // console.log('google available');
             gMap = new google.maps.Map(
                 document.querySelector('#map'), {
                 center: { lat, lng },
@@ -43,19 +44,20 @@ export function initMap(lat = 32.0749831, lng = 34.9120554) {
             })
 
             gMap.addListener('click', e => {
-                console.log(e)
-                console.log('location:', location)
+                // console.log(e)
+                // console.log('location:', location)
+                const name = prompt("Please Enter Location Name")
                 const latCoord = e.latLng.lat();
                 const lngCoord = e.latLng.lng();
                 addMarker({ lat: latCoord, lng: lngCoord });
-                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord }));
+                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord, id: utilService.makeId(5), name, createdAt: utilService.getTimeFixed(), updatedAt: utilService.getTimeFixed()}));
                 mapService.saveLocations();
 
-                console.log('lat cs:', e.latLng.lat())
-                console.log('lng coords:', e.latLng.lng())
+                // console.log('lat :', e.latLng.lat())
+                // console.log('lng :', e.latLng.lng())
             })
 
-            console.log('Map!', gMap);
+            // console.log('Map!', gMap);
         })
 }
 
