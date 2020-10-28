@@ -113,12 +113,11 @@ function renderLocations() {
                     <span>coords:(${loc.lat}/${loc.lng})</span>
                     <span>created at:${loc.createdAt}</span>
                     <span>updated at:${loc.updatedAt}</span>
-                    <button>Go</button> <button>Delete</button>
+                    <button class="go-btn" data-id="${loc.id}">Go</button> <button class="del-btn" data-id="${loc.id}">Delete</button>
                 </li>
         `
         })
         elLocationList.innerHTML = strHtmls.join('');
-        if (locations.length === 0) elLocationList.innerHTML = '<h1>You have 0 saved locations</h1>'
     })
 }
 
