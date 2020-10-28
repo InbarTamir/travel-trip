@@ -50,8 +50,9 @@ export function initMap(lat = 32.0749831, lng = 34.9120554) {
                 const latCoord = e.latLng.lat();
                 const lngCoord = e.latLng.lng();
                 addMarker({ lat: latCoord, lng: lngCoord });
-                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord, id: utilService.makeId(5), name, createdAt: utilService.getTimeFixed(), updatedAt: utilService.getTimeFixed()}));
+                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord, id: utilService.makeId(5), name, createdAt: utilService.getTimeFixed(), updatedAt: utilService.getTimeFixed() }));
                 mapService.saveLocations();
+                renderLocations();
 
                 // console.log('lat :', e.latLng.lat())
                 // console.log('lng :', e.latLng.lng())
@@ -100,4 +101,24 @@ function _connectGoogleApi() {
 }
 
 
+
+
+function renderLocations() {
+    const locations = mapService.getLocs().then((locs) => {
+        const elLocationList = document.querySelector('.location-list');
+        const strHtmls = locs.map(loc => {
+            return `<li class="location-item"> 
+                    <span>id:${loc.id}</span>
+                    <span>name:${loc.name}</span>
+                    <span>coords:(${loc.lat}/${loc.lng})</span>
+                    <span>created at:${loc.createdAt}</span>
+                    <span>updated at:${loc.updatedAt}</span>
+                    <button>Go</button> <button>Delete</button>
+                </li>
+        `
+        })
+        elLocationList.innerHTML = strHtmls.join('');
+        if (locations.length === 0) elLocationList.innerHTML = '<h1>You have 0 saved locations</h1>'
+    })
+}
 

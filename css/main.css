@@ -5,3 +5,33 @@
 body {
     margin: 0;
 }
+
+
+ul {
+    list-style-type: none;
+}
+
+a {
+    text-decoration: none;
+}
+button{
+    cursor: pointer;
+}
+.location-section {
+    margin-top: 100px;
+    background: #f8f8f8;
+    border-radius: 5px;
+    font-family: cursive;
+    margin: 0 auto;
+}
+
+.location-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 20px;
+    border-bottom: 1px solid gray;
+}
+.location-item span{
+    color:red
+}
