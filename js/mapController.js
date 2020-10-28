@@ -45,9 +45,11 @@ export function initMap(lat = 32.0749831, lng = 34.9120554) {
             gMap.addListener('click', e => {
                 console.log(e)
                 console.log('location:', location)
-                const latCoord = e.latLng.lat().toFixed(6);
-                const lngCoord = e.latLng.lng().toFixed(6);
-                
+                const latCoord = e.latLng.lat();
+                const lngCoord = e.latLng.lng();
+                addMarker({ lat: latCoord, lng: lngCoord });
+                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord }));
+                mapService.saveLocations();
 
                 console.log('lat cs:', e.latLng.lat())
                 console.log('lng coords:', e.latLng.lng())
