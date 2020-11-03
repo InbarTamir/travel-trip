@@ -19,7 +19,7 @@ function getRandomInt(min, max) {
 }
 
 function getTimeFixed(){
-    return Date(Date.now()).toString()
+    return new Date().toLocaleString();
 }
 
 export const utilService = {

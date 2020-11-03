@@ -5,7 +5,18 @@ import { utilService } from './util-service.js';
 
 const STORAGE_LOCS_KEY = 'locationsDB';
 
-var gLocs = [{ lat: 11.22, lng: 22.11, id: utilService.makeId(5), name: "lala land", createdAt:utilService.getTimeFixed() , updatedAt: utilService.getTimeFixed()}]
+var gLocs = loadLocs();
+
+function createLoc(name, latCoord, lngCoord) {
+    return {
+        lat: latCoord,
+        lng: lngCoord,
+        id: utilService.makeId(5),
+        name,
+        createdAt: utilService.getTimeFixed(),
+        updatedAt: utilService.getTimeFixed()
+    }
+}
 
 function getLocs() {
     return new Promise((resolve, reject) => {
@@ -15,13 +26,19 @@ function getLocs() {
     });
 }
 
-function saveLocations() {
+function saveLocs() {
     storageService.saveToStorage(STORAGE_LOCS_KEY, gLocs);
 }
 
+function loadLocs() {
+    return storageService.loadFromStorage(STORAGE_LOCS_KEY) || [];
+}
+
 export const mapService = {
+    // loadLocs,
+    createLoc,
     getLocs,
-    saveLocations
+    saveLocs
 }
 
 

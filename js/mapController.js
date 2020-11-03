@@ -1,74 +1,64 @@
-'use strict'
+'use strict';
 import { mapService } from './services/mapService.js';
 import { utilService } from './services/util-service.js';
 
 var gMap = null;
+var gMarkers = [];
+var gUserPos;
 console.log('Main!');
 
 mapService.getLocs()
-    .then(locs => console.log('locs', locs))
+    .then(locs => console.log('locs', locs));
 
 window.onload = () => {
     initMap()
         .then(() => {
-
-            addMarker({ lat: 32.0749831, lng: 34.9120554 });
+            getPosition()
+                .then(pos => {
+                    gUserPos = pos.coords;
+                    addPosition(null, 'Current Location');
+                    panTo({ lat: gUserPos.latitude, lng: gUserPos.longitude });
+                    // console.log('User position is:', pos.coords);
+                })
+                .catch(err => {
+                    console.log('err!!!', err);
+                });
         })
         .catch(console.log('INIT MAP ERROR'));
 
-    getPosition()
-        .then(pos => {
-
-            console.log('User position is:', pos.coords);
-        })
-        .catch(err => {
-            console.log('err!!!', err);
-        })
-}
-
-document.querySelector('.btn').addEventListener('click', (ev) => {
-    console.log('Aha!', ev.target);
-    panTo(35.6895, 139.6917);
-})
-
+};
 
 export function initMap(lat = 32.0749831, lng = 34.9120554) {
-    // console.log('InitMap');
     return _connectGoogleApi()
         .then(() => {
-            // console.log('google available');
             gMap = new google.maps.Map(
                 document.querySelector('#map'), {
                 center: { lat, lng },
                 zoom: 15
-            })
+            });
 
             gMap.addListener('click', e => {
-                // console.log(e)
-                // console.log('location:', location)
-                const name = prompt("Please Enter Location Name")
-                const latCoord = e.latLng.lat();
-                const lngCoord = e.latLng.lng();
-                addMarker({ lat: latCoord, lng: lngCoord });
-                mapService.getLocs().then(locs => locs.push({ lat: latCoord, lng: lngCoord, id: utilService.makeId(5), name, createdAt: utilService.getTimeFixed(), updatedAt: utilService.getTimeFixed() }));
-                mapService.saveLocations();
-                renderLocations();
-
-                // console.log('lat :', e.latLng.lat())
-                // console.log('lng :', e.latLng.lng())
-            })
-
-            // console.log('Map!', gMap);
-        })
+                addPosition(e);
+            });
+        });
 }
 
-function addMarker(loc) {
+function addMarker(name, loc) {
     var marker = new google.maps.Marker({
         position: loc,
         map: gMap,
-        title: 'Hello World!'
+        title: name
     });
+    gMarkers.push(marker);
     return marker;
+}
+
+function removeMarker(pos) {
+    const markerIdx = gMarkers.findIndex(marker => marker.position.lat() === pos.lat && marker.position.lng() === pos.lng);
+    if (markerIdx < 0) return;
+    var marker = gMarkers.splice(markerIdx, 1)[0];
+    marker.setMap(null);
+    marker = null;
 }
 
 function panTo(lat, lng) {
@@ -77,17 +67,27 @@ function panTo(lat, lng) {
 }
 
 function getPosition() {
-    console.log('Getting Pos');
-
     return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject)
-
-    })
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
 }
 
+function addPosition(e, locName = '') {
+    const name = (locName) ? locName : prompt("Please Enter Location Name");
+    const latCoord = (locName) ? gUserPos.latitude : e.latLng.lat();
+    const lngCoord = (locName) ? gUserPos.longitude : e.latLng.lng();
+    addMarker(name, { lat: latCoord, lng: lngCoord });
+
+    mapService.getLocs()
+        .then(locs => {
+            locs.push(mapService.createLoc(name, latCoord, lngCoord));
+            mapService.saveLocs();
+            renderLocations();
+        });
+}
 
 function _connectGoogleApi() {
-    if (window.google) return Promise.resolve()
+    if (window.google) return Promise.resolve();
     const API_KEY = 'AIzaSyCGs_6cQ28RFJz2-6FMpA3Q6Uy1FGoScww';
     var elGoogleApi = document.createElement('script');
     elGoogleApi.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}`;
@@ -96,28 +96,55 @@ function _connectGoogleApi() {
 
     return new Promise((resolve, reject) => {
         elGoogleApi.onload = resolve;
-        elGoogleApi.onerror = () => reject('Google script failed to load')
-    })
+        elGoogleApi.onerror = () => reject('Google script failed to load');
+    });
 }
-
-
-
 
 function renderLocations() {
-    const locations = mapService.getLocs().then((locs) => {
-        const elLocationList = document.querySelector('.location-list');
-        const strHtmls = locs.map(loc => {
-            return `<li class="location-item"> 
-                    <span>id:${loc.id}</span>
-                    <span>name:${loc.name}</span>
-                    <span>coords:(${loc.lat}/${loc.lng})</span>
-                    <span>created at:${loc.createdAt}</span>
-                    <span>updated at:${loc.updatedAt}</span>
-                    <button class="go-btn" data-id="${loc.id}">Go</button> <button class="del-btn" data-id="${loc.id}">Delete</button>
-                </li>
-        `
-        })
-        elLocationList.innerHTML = strHtmls.join('');
-    })
+    mapService.getLocs()
+        .then(locs => {
+            const elLocationList = document.querySelector('.location-list');
+            const strHtmls = locs.map(loc => {
+                return `<li class="location-item"> 
+                            <span>id:${loc.id}</span>
+                            <span>name:${loc.name}</span>
+                            <span class="coords">coords:(${loc.lat}/${loc.lng})</span>
+                            <span>created at:${loc.createdAt}</span>
+                            <span>updated at:${loc.updatedAt}</span>
+                            <button class="go-btn" data-id="${loc.id}">Go</button>
+                            <button class="del-btn" data-id="${loc.id}">Delete</button>
+                        </li>`;
+            });
+            elLocationList.innerHTML = strHtmls.join('');
+
+            // Event Listeners
+            document.querySelectorAll('.go-btn').forEach(elBtn => {
+                elBtn.addEventListener('click', (ev) => {
+                    const id = ev.target.dataset.id;
+                    const { lat, lng } = locs.find(loc => loc.id === id);
+                    panTo(lat, lng);
+                });
+            });
+            document.querySelectorAll('.del-btn').forEach(elBtn => {
+                elBtn.addEventListener('click', (ev) => {
+                    const id = ev.target.dataset.id;
+                    const locIdx = locs.findIndex(loc => loc.id === id);
+                    if (locIdx >= 0) {
+                        let currLoc = locs.splice(locIdx, 1)[0];
+                        removeMarker({lat: currLoc.lat, lng: currLoc.lng});
+                    }
+                    renderLocations();
+                });
+            });
+        });
 }
 
+// document.querySelector('.go-btn').addEventListener('click', (ev) => {
+//     console.log('Go!', ev.target);
+//     // panTo(35.6895, 139.6917);
+// });
+
+// document.querySelector('.del-btn').addEventListener('click', (ev) => {
+//     console.log('Delete!', ev.target);
+//     // panTo(35.6895, 139.6917);
+// });
